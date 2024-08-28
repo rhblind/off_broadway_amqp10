@@ -115,7 +115,11 @@ defmodule OffBroadwayAmqp10.Producer do
     {:stop, :connection_closed_forcefully, state}
   end
 
-  @impl GenStage
+  def handle_info({:amqp10_event, {:connection, _pid, {:closed, error_message}}}, state) do
+    Logger.error("off_broadway_amqp10 connection closed, message: [#{error_message}]")
+    {:stop, :connection_closed, state}
+  end
+
   def handle_info(:begin_session, state) do
     log_command("begin session")
 
