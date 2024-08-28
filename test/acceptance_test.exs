@@ -27,9 +27,18 @@ defmodule OffBroadwayAmqp10.AcceptanceTest do
       )
   end
 
+  defp stop_broadway(pid) do
+    ref = Process.monitor(pid)
+    Process.exit(pid, :normal)
+
+    receive do
+      {:DOWN, ^ref, _, _, _} -> :ok
+    end
+  end
+
   test "delivers message to broadway instance" do
     {:ok, _amqp_client} = RealisticFakeAmqpClient.start_link(self())
-    {:ok, _broadway_pid} = start_broadway()
+    {:ok, broadway_pid} = start_broadway()
 
     # Connection
     assert_receive {RealisticFakeAmqpClient, :open_connection_called, _}
@@ -55,5 +64,7 @@ defmodule OffBroadwayAmqp10.AcceptanceTest do
     end
 
     assert_receive {RealisticFakeAmqpClient, :flow_link_credit_called, [_, _, _]}
+
+    stop_broadway(broadway_pid)
   end
 end
